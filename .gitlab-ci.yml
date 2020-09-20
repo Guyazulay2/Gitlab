@@ -1,10 +1,10 @@
 image: docker
 stages:
+ - install 
  - deploy
  - test
 
 before_script:
-  - 
   - sudo apt-get update -qq
   - sudo apt-get install -qq git
   - 'which ssh-agent || ( sudo apt-get install -qq openssh-client )'
@@ -12,6 +12,11 @@ before_script:
   - ssh-add <(echo "$SSH_PRIVATE_KEY")
   - mkdir -p ~/.ssh
   - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+ssh to instance:
+  stage: install
+  script:
+    - ssh -i /home/ubuntu/key.pem ubuntu@3.21.156.249 -o StrictHostKeyChecking=no "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list && sudo apt-get update -qq && sudo apt-get install -y nvidia-container-toolkit && sudo systemctl restart docker"
 
 
 ssh to instance:
