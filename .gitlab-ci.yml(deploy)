@@ -30,3 +30,6 @@ test the image:
   stage: test
   script:
     - ssh -i /home/ubuntu/key.pem ubuntu@3.21.156.249 -o StrictHostKeyChecking=no "docker images &&  docker ps -a"
+
+
+### EOF ###
