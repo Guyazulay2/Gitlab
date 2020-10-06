@@ -1,0 +1,31 @@
+image: docker
+stages:
+ - install 
+ - deploy
+ - test
+
+before_script:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq git
+  - 'which ssh-agent || ( sudo apt-get install -qq openssh-client )'
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+ssh to instance:
+  stage: install
+  script:
+    - ssh -i /home/ubuntu/new.pem ubuntu@3.21.156.249 -o StrictHostKeyChecking=no "sudo apt update && sudo apt-get install python3 && sudo apt install apt-transport-https ca-certificates curl software-properties-common -y  && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"  && sudo apt update"
+    - ssh -i /home/ubuntu/new.pem ubuntu@3.21.156.249 -o StrictHostKeyChecking=no "apt-cache policy docker-ce && sudo apt install docker-ce -y && sudo apt-get install docker-compose -y "
+    - echo "** Install Nvidia-docker **"
+    - ssh -i /home/ubuntu/new.pem ubuntu@3.21.156.249 -o StrictHostKeyChecking=no "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list && sudo apt-get update && sudo apt-get install -y nvidia-docker2 && sudo systemctl restart docker"
+
+
+
+
+test the image:
+  stage: test
+  script:
+    - echo "** Check Nvidia drivers and docker installation **"
+    - ssh -i /home/ubuntu/key.pem ubuntu@3.21.156.249 -o StrictHostKeyChecking=no "docker version && nvidia-smi"
